@@ -16,16 +16,11 @@ def get_arrays():
 
 
 def main_one():
-    sum = 0
     arr1, arr2 = get_arrays()
-    while len(arr1) > 0:
-        idx1 = np.argmin(arr1)
-        idx2 = np.argmin(arr2)
-        sum += abs(arr1[idx1] - arr2[idx2])
-        del arr1[idx1]
-        del arr2[idx2]
+    arr1.sort()
+    arr2.sort()
 
-    return sum
+    return sum(abs(x - y) for x, y in zip(arr1, arr2))
 
 
 def main_two():
