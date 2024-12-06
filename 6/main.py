@@ -1,5 +1,5 @@
 import os
-from pprint import pprint
+from copy import copy
 
 dirname = os.path.dirname(__file__)
 filename = os.path.join(dirname, "input.txt")
@@ -41,11 +41,14 @@ def main_one():
             cur_pos[1] + move[1]
         )
         if next_pos[0] < 0 or next_pos[1] < 0 or next_pos[0] >= len(board[0]) or next_pos[1] >= len(board):
+            end_dir = cur_direction + 1
+            end_dir = end_dir % 4
+            pivot_points.append(([next_pos[0], next_pos[1]], end_dir))
             break
         if board[next_pos[1]][next_pos[0]] == "#":
             cur_direction += 1
             cur_direction = cur_direction % 4
-            pivot_points.append(cur_pos)
+            pivot_points.append(([cur_pos[0], cur_pos[1]], cur_direction))
         else:
             cur_pos = next_pos
 
@@ -57,13 +60,36 @@ def main_one():
 
 
 def main_two(pivot_points):
-    total = 0
+    potential_points = set()
 
-    print(pivot_points)
-    for start, end in zip(pivot_points[:-1], pivot_points[1:]):
-        print(start, end)
+    for (start, end) in zip(pivot_points[2:-1], pivot_points[3:]):
+        check_pos = copy(start[0])
+        while True:
+            cur_dir = DIRECTIONS[start[1]]
+            check_pos[0] += cur_dir[0]
+            check_pos[1] += cur_dir[1]
+            if check_pos == end[0]:
+                break
 
-    return total
+            # check
+            would_be_dir = start[1] + 1
+            would_be_dir = would_be_dir % 4
+            if would_be_dir in [0, 2]:  # Vertical
+                candidate_x = check_pos[0]
+                candidate_dir = would_be_dir + 1
+                candidate_dir = candidate_dir % 4
+                candidates = [x for x in filter(lambda x: x[0][0] == candidate_x and x[1] == candidate_dir, pivot_points)]
+                if len(candidates) > 0:
+                    potential_points.add((check_pos[0] + cur_dir[0], check_pos[1] + cur_dir[1]))
+            else:  # horizontal
+                candidate_y = check_pos[1]
+                candidate_dir = would_be_dir + 1
+                candidate_dir = candidate_dir % 4
+                candidates = [x for x in filter(lambda x: x[0][1] == candidate_y and x[1] == candidate_dir, pivot_points)]
+                if len(candidates) > 0:
+                    potential_points.add((check_pos[0] + cur_dir[0], check_pos[1] + cur_dir[1]))
+
+    return len(potential_points)
 
 
 if __name__ == "__main__":
