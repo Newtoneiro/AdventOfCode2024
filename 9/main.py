@@ -42,38 +42,40 @@ def main_one():
 def main_two():
     content = get_disc_map()
 
-    front = 0
-    while front < len(content):
-        while content[front] != "." and front < len(content):
-            front += 1
-        start = front
-        while content[front] == "." and front < len(content):
-            front += 1
-        end = front - 1
-        free_space_length = end - start + 1
+    back = len(content) - 1
+    while back > 0:
+        while content[back] == "." and back > 0:
+            back -= 1
+        back_begin = back
+        while content[back_begin] == content[back] and back_begin > 0:
+            back_begin -= 1
+        back_begin += 1
+        group_len = back - back_begin + 1
 
-        back = len(content) - 1
-        while back > 0:
-            if content[back] != ".":
-                back_begin = back
-                while content[back_begin] == content[back]:
-                    back_begin -= 1
-                back_begin += 1
-                if back - back_begin + 1 <= free_space_length:
+        front = 0
+        while front < back_begin:
+            if content[front] == ".":
+                front_end = front
+                while content[front_end] == ".":
+                    front_end += 1
+                front_end -= 1
+                gap_len = front_end - front + 1
+                if group_len <= gap_len:
                     break
                 else:
-                    back = back_begin
-            back -= 1
+                    front = front_end
+            front += 1
 
-        if start >= back_begin:
+        if back_begin <= front_end:
             break
 
-        i = start
-        for j in range(back_begin, back + 1):
-            content[i] = content[j]
-            content[j] = "."
-            i += 1
-        front = i
+        if front < back_begin:
+            i = front
+            for j in range(back_begin, back + 1):
+                content[i] = content[j]
+                content[j] = "."
+                i += 1
+        back = back_begin - 1
 
     return sum(i * int(id) if id != '.' else 0 for i, id in enumerate(content))
 
