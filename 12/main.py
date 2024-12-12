@@ -1,5 +1,6 @@
 import os
 from collections import defaultdict, deque
+from copy import copy
 
 dirname = os.path.dirname(__file__)
 filename = os.path.join(dirname, "input.txt")
@@ -70,22 +71,55 @@ def main_one():
 
 
 def calculate_sides(coordinates):
-    return 0
+    corners = 0  # neat trick, the figure has as many corners as it has sides.
+
+    for (c_x, c_y) in coordinates:
+        c_neighbors = set()
+        for dx, dy in NEIGHBOURS:
+            if (c_x + dx, c_y + dy) in coordinates:
+                c_neighbors.add((c_x + dx, c_y + dy))
+
+        if len(c_neighbors) == 0:  # Single, left alone block -> + 4 sides
+            corners += 4
+        elif len(c_neighbors) == 1:  # A pimple in a figure -> + 2 corners
+            corners += 2
+        else:  # For every other combination -> L shapes, T shapes and + shapes
+            if ((c_x - 1, c_y) in c_neighbors and (c_x, c_y - 1) in c_neighbors):
+                if len(c_neighbors) == 2:  # If is L shaped (count the sharp corner)
+                    corners += 1
+                if (c_x - 1, c_y - 1) not in coordinates:  # Check for the inner corner
+                    corners += 1
+            if ((c_x, c_y - 1) in c_neighbors and (c_x + 1, c_y) in c_neighbors):
+                if len(c_neighbors) == 2:
+                    corners += 1
+                if (c_x + 1, c_y - 1) not in coordinates:
+                    corners += 1
+            if ((c_x + 1, c_y) in c_neighbors and (c_x, c_y + 1) in c_neighbors):
+                if len(c_neighbors) == 2:
+                    corners += 1
+                if (c_x + 1, c_y + 1) not in coordinates:
+                    corners += 1
+            if ((c_x, c_y + 1) in c_neighbors and (c_x - 1, c_y) in c_neighbors):
+                if len(c_neighbors) == 2:
+                    corners += 1
+                if (c_x - 1, c_y + 1) not in coordinates:
+                    corners += 1
+
+    return corners
 
 
 def get_value_2(squares):
     area = len(squares)
     sides = calculate_sides(squares)
-    print(area, sides)
     return area * sides
 
 
 def main_two():
+    # was really stuck on this one, done thanks to this -> https://www.reddit.com/r/adventofcode/comments/1hcf16m/2024_day_12_everyone_must_be_hating_today_so_here/
     plots = get_plots()
     total = 0
 
-    for name, squares in plots.items():
-        print(name)
+    for squares in plots.values():
         total += get_value_2(squares)
 
     return total
