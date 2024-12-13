@@ -1,6 +1,5 @@
 import os
 from collections import defaultdict, deque
-from copy import copy
 
 dirname = os.path.dirname(__file__)
 filename = os.path.join(dirname, "input.txt")
