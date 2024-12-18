@@ -1,5 +1,7 @@
 import os
 import heapq
+from copy import copy
+
 
 dirname = os.path.dirname(__file__)
 filename = os.path.join(dirname, "input.txt")
@@ -91,12 +93,20 @@ def main_two():
     for coord in coords[:data_size]:
         grid[coord[1]][coord[0]] = "#"
 
-    for i in range(data_size, len(coords)):
-        new_coord = coords[i]
-        grid[new_coord[1]][new_coord[0]] = "#"
-        if not astar(grid):
-            return coords[i]
-    return None
+    low = data_size
+    high = len(coords) - 1
+
+    while abs(low - high) > 1:
+        grid_cp = [copy(row) for row in grid]
+        middle = int((high + low) / 2)
+        for x, y in coords[:middle + 1]:
+            grid_cp[y][x] = "#"
+        if not astar(grid_cp):
+            high = middle
+        else:
+            low = middle
+
+    return coords[high]
 
 
 if __name__ == "__main__":
