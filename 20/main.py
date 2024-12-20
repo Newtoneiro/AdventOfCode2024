@@ -2,7 +2,7 @@ import os
 import sys
 import heapq
 from copy import copy
-from collections import deque, defaultdict
+from collections import defaultdict
 
 dirname = os.path.dirname(__file__)
 filename = os.path.join(dirname, "input.txt")
@@ -92,54 +92,19 @@ def main_one(saved_time):
     return total_cheats
 
 
-def get_moves_two(grid, pos, can_cheat):
-    (pos_x, pos_y) = pos
+def get_moves_two(grid, cur_pos):
     out = set()
-    neighbours = [(n, 1) for n in NEIGHBOURS]
-    for (dx, dy), cost in neighbours:
-        nx, ny = pos_x + dx, pos_y + dy
-        if nx < 0 or\
-                nx >= len(grid[0]) or\
-                ny < 0 or\
-                ny >= len(grid) or\
-                grid[ny][nx] == "#":
-            continue
-
-        out.add(((nx, ny), cost, ()))
-
-    if can_cheat:
-        stack = deque()
-        visited = set([(pos_x, pos_y)])
-        for dx, dy in NEIGHBOURS:
-            nx, ny = pos_x + dx, pos_y + dy
+    for dx in range(cur_pos[0] - CHEAT_PS, cur_pos[0] + CHEAT_PS + 1):
+        for dy in range(cur_pos[1] - CHEAT_PS, cur_pos[1] + CHEAT_PS + 1):
+            nx, ny = cur_pos[0] + dx, cur_pos[1] + dy
             if nx < 0 or\
                     nx >= len(grid[0]) or\
                     ny < 0 or\
                     ny >= len(grid):
                 continue
-
-            if grid[ny][nx] == "#":
-                stack.append(((nx, ny), 1))
-
-        while len(stack) > 0:
-            cur_pos, cur_cost = stack.pop()
-            if cur_pos in visited or cur_cost >= CHEAT_PS:
-                continue
-            visited.add(cur_pos)
-            for dx, dy in NEIGHBOURS:
-                nx, ny = cur_pos[0] + dx, cur_pos[1] + dy
-                if nx < 0 or\
-                        nx >= len(grid[0]) or\
-                        ny < 0 or\
-                        ny >= len(grid):
-                    continue
-                if grid[ny][nx] != "#":
-                    if (nx, ny) not in visited:
-                        out_cost = abs(nx - pos_x) + abs(ny - pos_y)
-                        out.add(((nx, ny), out_cost, ((pos_x, pos_y), (nx, ny))))
-                else:
-                    stack.append(((nx, ny), cur_cost + 1))
-
+            out_cost = abs(nx - cur_pos[0]) + abs(ny - cur_pos[1])
+            if out_cost <= CHEAT_PS and grid[ny][nx] != "#":
+                out.add(((nx, ny), out_cost, (cur_pos, (nx, ny))))
     return out
 
 
@@ -178,38 +143,29 @@ def main_two(min_saved_time):
         return float('inf'), []  # If no path exists
 
     cost_without_cheats, path = djikstra(grid, start, end)
-    costs = defaultdict(set)
-    checked_cheats = set()
+    costs = defaultdict(int)
+
     for i, node_a in enumerate(path):
         print(f"{i} / {len(path)}")
-        for out_a, cheat_dist, cheat in get_moves_two(grid, node_a, True):
-            if cheat in checked_cheats:
-                continue
-            dist, _ = djikstra(grid, out_a, end)
-            if dist == float('inf'):
-                continue
+        for out_a, cheat_dist, cheat in get_moves_two(grid, node_a):
+            idx = path.index(out_a)
+            if idx > 0:
+                dist = len(path) - idx - 1
+            else:
+                dist, _ = djikstra(grid, out_a, end)
+                if dist == float('inf'):
+                    continue
             new_cost = i + cheat_dist + dist
-            if new_cost < cost_without_cheats and cost_without_cheats - new_cost >= min_saved_time:
-                costs[new_cost].add(cheat)
-            checked_cheats.add(cheat)
-
-
-        # print(f"{i} / {len(path)}")
-        # for j, node_b in enumerate(path):
-        #     if start != end:
-        #         distance = get_distance(node_a, node_b)
-        #         if distance <= CHEAT_PS and is_valid_cheat(node_a, node_b):
-        #             new_cost = i + distance + (cost_without_cheats - j)
-        #             if new_cost < cost_without_cheats and cost_without_cheats - new_cost >= min_saved_time:
-        #                 costs[new_cost].add((node_a, node_b))
+            if cost_without_cheats - new_cost >= min_saved_time:
+                costs[new_cost] += 1
 
     total = 0
-    for c, items in sorted(costs.items(), key=lambda item: item[0]):
-        total += len(items)
-        print(f"{cost_without_cheats - c}: {len(items)}")
+    for c, count in sorted(costs.items(), key=lambda item: item[0]):
+        total += count
+        print(f"{cost_without_cheats - c}: {count}")
     return total
 
 
 if __name__ == "__main__":
-    # print(main_one(100))
-    print(main_two(50))
+    print(main_one(100))
+    print(main_two(100))
